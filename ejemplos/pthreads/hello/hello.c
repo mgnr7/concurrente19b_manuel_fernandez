@@ -21,7 +21,7 @@ void* run(void* data)
 int main (void)
 {
 	pthread_t thread;  										/*Intanciar Registro*/
-	pthread_create(&thread, NULL, run, (void*)1);				/*Creal el thread e inicializa el registro*/
+	pthread_create(&thread, NULL, run, (void*)13);			/*Creal el thread e inicializa el registro, reserva recursos e inicia la ejecución de la función*/
 	printf("Hellow World from main thread\n");
 	pthread_join(thread, NULL);								/*Espera al thread del registro que se le pasa por parametro, retorna un codigo de error*/
 	return 0;
