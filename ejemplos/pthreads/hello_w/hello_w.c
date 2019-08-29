@@ -19,7 +19,7 @@ int main (int argc, char*argv[])
 		thread_count = strtoull(argv[1], NULL, 10);
 	}
 	
-	pthread_t* threads = (pthread_t*) malloc(thread_count * sizeof(pthread_t)); 					/*malloc retorna un puntero void*/
+	pthread_t* threads = (pthread_t*) malloc(thread_count * sizeof(pthread_t)); 	/*malloc retorna un puntero void y reserva (thread_count * sizeof(pthread_t)) espacio en memoria*/
 	
 	for(size_t index = 0; index < thread_count ; ++index)							/*Primera fase: Creacion de threads*/
 		pthread_create(&threads[index], NULL, run, (void*)index);
