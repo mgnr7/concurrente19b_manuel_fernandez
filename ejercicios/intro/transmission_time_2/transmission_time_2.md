@@ -4,5 +4,5 @@
 
 Es necesario aumentar el ancho de banda, ya que para poder tener 70 sensores funcionando al mismo tiempo los servidores van a recibir al 2 archivos por segundo cada uno de diferente sensor.
 
-Es por ello que se requiere un ancho de banda de al menos 24 Mbps, ya que equivalen a 3 MB o 2 archivos enviados por los sensores.
+Es por ello que se requiere un ancho de banda de al menos 24 Mbps, ya que equivalen a 3 MB o 2 archivos enviados por los sensores cada segundo.
 
