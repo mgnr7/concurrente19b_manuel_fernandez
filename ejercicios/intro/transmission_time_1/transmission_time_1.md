@@ -8,14 +8,15 @@ Donde _T_ es tiempo, _L_ es latencia, _s_ son los bytes transmitidos y _b_ es el
 Además $20ms$ (20 mili segundos) = $0,02$ segundos.
 
 Como hay que distribuir 7.2TB de datos entre 28 computadoras, cada computadora debería de tener al rededor de 0.26TB de datos para que la distribución sea equitativa.
-$0.26TB = 2600600 MB$
 
-Al sustituir los valores en la formula se tiene:
-$T = 0,02 +$$\frac{1MB}{10.65MB}$ 
-Lo cual nos indica que para transmitir 1MB se requieren $\frac{1213}{10650}$  segundos.
+$7.2TB = 7200000 MB$
 
-Al multiplicar el tiempo de transmisión del mensaje por la cantidad de MB que hay que transmitir hacia cada computadora se obtiene:
-$296199$ segundos, lo que equivale a 4936 minutos o 82 horas.
+Como hay 28 computadoras se tiene: $\frac{7200000}{28}$ o $257142MB$ para cada computadora
+
+Al sustituir los valores en la formula se tiene: 
+$T = 0,02 +$$\frac{257142MB}{10.65MB}$ 
+Lo cual nos indica que para transmitir $257142MB$ se requieren $24144$  segundos o $6.7$ horas.
+
 
 
 
