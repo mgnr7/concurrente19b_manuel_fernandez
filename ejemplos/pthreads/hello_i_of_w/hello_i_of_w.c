@@ -65,7 +65,7 @@ int main (int argc, char*argv[])
 	for(size_t index = 0; index < thread_count ; ++index)							/*Segunda fase: Espera por cada uno de los threads*/	
 		pthread_join(threads[index], NULL); 														
 	
-	struct timespec end_time;	
+	struct timespec end_time;
 	clock_gettime(CLOCK_MONOTONIC, &end_time);
 	
 	double elapsed_seconds = end_time.tv_sec - start_time.tv_sec + 1e-9 *(end_time.tv_nsec - start_time.tv_nsec);
