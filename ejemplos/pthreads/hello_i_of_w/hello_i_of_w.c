@@ -30,9 +30,7 @@ int main (int argc, char*argv[])
 	size_t thread_count = sysconf(_SC_NPROCESSORS_ONLN);
 	
 	if(argc >=2)
-	{
 		thread_count = strtoull(argv[1], NULL, 10);
-	}
 	
 	pthread_t* threads = (pthread_t*) malloc(thread_count * sizeof(pthread_t)); 	/*malloc retorna un puntero void y reserva (thread_count * sizeof(pthread_t)) espacio en memoria*/
 	
