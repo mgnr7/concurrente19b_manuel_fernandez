@@ -51,6 +51,7 @@ int main (int argc, char*argv[])
 		
 	struct timespec start_time;	
 	clock_gettime(CLOCK_MONOTONIC, &start_time);						/*Mide el tiempo y lo guarda en el registro*/	
+	
 	for(size_t index = 0; index < thread_count ; ++index)							/*Primera fase: Creacion de threads*/
 	{
 		private_data[index].thread_num = index;
