@@ -1,4 +1,5 @@
-APPNAME=$(shell basename$(shell pwd))
+APPNAME=hello_ordered_wait 
+#$(shell basename$(shell pwd))
 
 $(APPNAME): $(APPNAME).c
 	cc -g -Wall -Wextra $(APPNAME).c -o $(APPNAME) -pthread
