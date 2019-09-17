@@ -3,9 +3,15 @@
 #include <pthread.h>
 #include <unistd.h>
 
+int pthread_mutex_init(pthread_mutex_t *mutex, 
+    const pthread_mutexattr_t *attr);
+int pthread_mutex_destroy(pthread_mutex_t *mutex);
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 typedef struct
 {
   size_t thread_count;
+  pthread_mutex_t position_mutex;
   size_t position;
 } shared_data_t;														/*Compartido entre los threads, puede ser modificado al mismo tiempo*/
 
@@ -25,10 +31,12 @@ int main (int argc, char*argv[])
 		return (void)fprintf(stderr, "error: could not allocate memory\n"), 2;
 	
 	shared_data->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
-	shared_data->position = 0;
-	
 	if(argc >=2)
 		shared_data->thread_count = strtoull(argv[1], NULL, 10);
+	
+	pthread_mutex_init(&shared_data->position_mutex,/*attr*/NULL);
+	
+	shared_data->position = 0;
 	
 	struct timespec start_time;	
 	clock_gettime(CLOCK_MONOTONIC, &start_time);						/*Mide el tiempo y lo guarda en el registro*/	
@@ -43,6 +51,8 @@ int main (int argc, char*argv[])
 	double elapsed_seconds = end_time.tv_sec - start_time.tv_sec + 1e-9 *(end_time.tv_nsec - start_time.tv_nsec);
 	printf("Hellow execution time %.9lfs\n", elapsed_seconds);
 	
+	pthread_mutex_destroy(&shared_data->position_mutex);
+	free(shared_data);
 	return 0;
 }
 
@@ -68,14 +78,15 @@ int create_threads(shared_data_t* shared_data)
 		pthread_create(&threads[index], NULL, run, &private_data[index]);
 	}
 	
-	
+	pthread_mutex_lock(&shared_data->position_mutex);
+	printf("Hellow World from main thread\n");
+	pthread_mutex_unlock(&shared_data->position_mutex);
+		
 	for(size_t index = 0; index < shared_data->thread_count ; ++index)							/*Segunda fase: Espera por cada uno de los threads*/	
 		pthread_join(threads[index], NULL); 														
 	
-	printf("Hellow World from main thread\n");
 	
 	free(private_data);				/*Se elimina en el orden inverso en el que se crea la memoria dinamica*/
-	free(shared_data);
 	free(threads);	
 	return 0;
 }
@@ -87,10 +98,12 @@ void* run(void* data)
 	
 	size_t thread_num = (*private_data).thread_num;
 	size_t thread_count = shared_data->thread_count; 
-			
-	printf("thread %zu / %zu: arrived at position %zu\n", thread_num, thread_count, 
-	++shared_data->position); 
 	
+	pthread_mutex_lock(&shared_data->position_mutex);
+	++shared_data->position;		
+	printf("thread %zu / %zu: arrived at position %zu\n", thread_num, thread_count, 
+	shared_data->position); 		/*Operacion de escritura*/
+	pthread_mutex_unlock(&shared_data->position_mutex);
 	
 	return NULL;
 }
