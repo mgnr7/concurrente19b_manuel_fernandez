@@ -3,11 +3,6 @@
 #include <pthread.h>
 #include <unistd.h>
 
-int pthread_mutex_init(pthread_mutex_t *mutex, 
-    const pthread_mutexattr_t *attr);
-int pthread_mutex_destroy(pthread_mutex_t *mutex);
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
 typedef struct
 {
   size_t thread_count;
@@ -100,6 +95,7 @@ void* run(void* data)
 	size_t thread_count = shared_data->thread_count; 
 	
 	pthread_mutex_lock(&shared_data->position_mutex);
+	
 	++shared_data->position;		
 	printf("thread %zu / %zu: arrived at position %zu\n", thread_num, thread_count, 
 	shared_data->position); 		/*Operacion de escritura*/
