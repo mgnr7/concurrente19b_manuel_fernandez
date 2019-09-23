@@ -5,9 +5,16 @@
 
 typedef struct
 {
-  size_t thread_count;
+  /*size_t thread_count;
   pthread_mutex_t position_mutex;
   size_t position;
+  */
+  size_t buffer;
+  size_t rounds;
+  size_t minimum_producer
+  size_t maximum_producer
+  size_t minimum_consumer
+  size_t maximum_consumer
 } shared_data_t;														/*Compartido entre los threads, puede ser modificado al mismo tiempo*/
 
 typedef struct 
@@ -25,9 +32,10 @@ int main (int argc, char*argv[])
 	if(shared_data == NULL)
 		return (void)fprintf(stderr, "error: could not allocate memory\n"), 2;
 	
-	shared_data->thread_count = sysconf(_SC_NPROCESSORS_ONLN);
-	if(argc >=2)
-		shared_data->thread_count = strtoull(argv[1], NULL, 10);
+	/*shared_data->thread_count = sysconf(_SC_NPROCESSORS_ONLN);*/
+	
+	if(argc >= 7)
+		
 	
 	pthread_mutex_init(&shared_data->position_mutex,/*attr*/NULL);
 	
