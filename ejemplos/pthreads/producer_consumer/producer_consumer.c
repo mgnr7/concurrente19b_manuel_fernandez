@@ -37,8 +37,8 @@ int main (int argc, char*argv[])
 		if( shared_data->buffer )
 		{
 			
-			sem_init(shared_data->producer_semaphore, 0/*pshared*/, shared_data->buffer_size /*valor inicial*/);
-			sem_init(shared_data->consumer_semaphore, 0/*pshared*/, 0 /*valor inicial*/);
+			sem_init(&shared_data->producer_semaphore, 0/*pshared*/, shared_data->buffer_size /*valor inicial*/);
+			sem_init(&shared_data->consumer_semaphore, 0/*pshared*/, 0 /*valor inicial*/);
 			pthread_mutex_init(&shared_data->stdout_mutex,NULL);
 			
 			struct timespec start_time;	
