@@ -23,6 +23,7 @@ int analyze_arguments(int argc, char*argv[], shared_data_t* shared_data);
 int create_threads(shared_data_t* shared_data);
 void* produce(void* data);
 void* consume(void* data);
+void random_sleep(useconds_t min_milliseconds, useconds_t max_milliseconds);
 
 int main (int argc, char*argv[])
 {
@@ -89,7 +90,7 @@ int analyze_arguments(int argc, char*argv[], shared_data_t* shared_data)
 		fprintf(stderr, "invalid rounds: %s\n", argv[2]);
 		return 2;
 	}
-	if(sscanf(argv[3],"%u", &shared_data->min_producer_delay) != 1)
+	if(sscanf(argv[3],"%zu", &shared_data->min_producer_delay) != 1)
 	{
 		fprintf(stderr, "invalid min_producer_delay: %s\n", argv[3]);
 		return 3;
@@ -102,13 +103,14 @@ int analyze_arguments(int argc, char*argv[], shared_data_t* shared_data)
 		return 4;
 	}
 	
-	if(sscanf(argv[5],"%u", &shared_data->min_consumer_delay) != 1)
+	if(sscanf(argv[5],"%zu", &shared_data->min_consumer_delay) != 1)
 	{
 		fprintf(stderr, "invalid min_consumer_delay: %s\n", argv[3]);
 		return 5;
 	}
 		
-	if(sscanf(argv[6],"%zu", &shared_data->max_consumer_delay) != 1)
+	if(sscanf(argv[6],"%zu", &shared_data->max_consumer_delay) != 1
+	|| shared_data->max_consumer_delay < shared_data->min_consumer_delay)
 	{
 		fprintf(stderr, "invalid max_consumer_delay: %s\n", argv[4]);	
 		return 6;	
