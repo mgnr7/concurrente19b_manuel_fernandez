@@ -13,7 +13,6 @@ typedef struct
   sem_t* batons;
   pthread_mutex_t stdout_mutex;
   size_t position;
-  pthread_mutex_t position_mutex;
   size_t team_count;
   pthread_barrier_t start_barrier;
 } shared_data_t;														
@@ -34,7 +33,7 @@ int main (int argc, char*argv[])
 	shared_data_t* shared_data = (shared_data_t*) calloc(1, sizeof(shared_data_t));
 	if(shared_data == NULL)
 		return (void)fprintf(stderr, "error: could not allocate memory\n"), 2;
-
+		
 	int error = analyze_arguments(argc, argv, shared_data);
 	if(error == 0)
 	{
@@ -46,9 +45,9 @@ int main (int argc, char*argv[])
 				sem_init(&shared_data->batons[index], 0/*pshared*/, 0 /*valor inicial*/);
 			}
 				
-			pthread_barrier_init(&shared_data->start_barrier, NULL , &shared_data->team_count);  /*restrict: A un lugar de la memoria no se le va a apuntar con 2 punteros diferentes (permite mayor optimizacion por parte del compilador)*/
+			pthread_barrier_init(&shared_data->start_barrier, NULL , shared_data->team_count);  /*restrict: A un lugar de la memoria no se le va a apuntar con 2 punteros diferentes (permite mayor optimizacion por parte del compilador)*/
 			shared_data->position = 0;
-			pthread_mutex_init(&shared_data->position_mutex,NULL);
+			pthread_mutex_init(&shared_data->stdout_mutex,NULL);
 			
 			struct timespec start_time;	
 			clock_gettime(CLOCK_MONOTONIC, &start_time);	
@@ -60,15 +59,15 @@ int main (int argc, char*argv[])
 				clock_gettime(CLOCK_MONOTONIC, &end_time);
 				
 				double elapsed_seconds = end_time.tv_sec - start_time.tv_sec + 1e-9 *(end_time.tv_nsec - start_time.tv_nsec);
-				printf("Simulation time %.9lfs\n", elapsed_seconds);
+				printf("\nSimulation time %.9lfs\n", elapsed_seconds);
 			}
-			pthread_mutex_destroy(&shared_data->position_mutex);
+			pthread_mutex_destroy(&shared_data->stdout_mutex);
 			pthread_barrier_destroy(&shared_data->start_barrier);
 			free(shared_data->batons);
 		}
 		else
 		{
-			fprintf("error could not allocate memory for %zu batons", shared_data->team_count);
+			fprintf(stderr, "error could not allocate memory for %zu batons", shared_data->team_count);
 			error = 2;
 		}
 	}
@@ -82,26 +81,27 @@ int analyze_arguments(int argc, char*argv[], shared_data_t* shared_data)
 {
 	if(argc != 4)
 	{
-		fprintf(stderr, "\n	usage: team_count, stage1_duration, stage2_duration\n");
-		
+		fprintf(stderr, "\nusage: team_count, stage1_duration, stage2_duration\n");	
 		return 1;
 	}
 	
-	if((sscanf(argv[1],"%zu", &shared_data->team_count) != 1 )|| &shared_data->team_count == 0)
+	if((sscanf(argv[1],"%zu", &shared_data->team_count) != 1 )|| shared_data->team_count == 0)
 	{	
 		fprintf(stderr, "invalid team_count: %s\n", argv[1]);
-		return 3;
+		return 1;
 	}
+	
+	
 	if(sscanf(argv[2],"%zu", &shared_data->stage1_duration) != 1)
 	{
 		fprintf(stderr, "invalid stage1_duration: %s\n", argv[2]);
-		return 4;
+		return 2;
 	}
 		
 	if(sscanf(argv[3],"%zu", &shared_data->stage2_duration) != 1 )
 	{
 		fprintf(stderr, "invalid stage2_duration: %s\n", argv[3]);
-		return 5;
+		return 3;
 	}
 	
 	return EXIT_SUCCESS;
@@ -123,7 +123,7 @@ int create_threads(shared_data_t* shared_data)
 		return (void)fprintf(stderr, "error: could not allocate memory for %zu threads \n", thread_count), 3;
 		
 	#if INVERTED_TEAM_ORDER	
-	for(size_t index = shared_data->team_count; index < shared_data->team_count; --index)
+	for(size_t index = shared_data->team_count-1; index < shared_data->team_count; --index)
 	#else 
 	for(size_t index = 0; index < shared_data->team_count; ++index)							/*Primera fase: Creacion de threads*/
 	#endif
@@ -136,7 +136,7 @@ int create_threads(shared_data_t* shared_data)
 	#if INVERTED_TEAM_ORDER	
 	for(size_t index = thread_count-1; index >= shared_data->team_count; --index)
 	#else 
-	for(size_t index = shared_data->team_count; index < thread_count; --index)							/*Primera fase: Creacion de threads*/
+	for(size_t index = shared_data->team_count; index < thread_count; --index)							
 	#endif					
 	{
 		private_data[index].my_team_number = index - shared_data->team_count;
@@ -145,8 +145,11 @@ int create_threads(shared_data_t* shared_data)
 	}	
 		
 		
-	for(size_t index = 0; index < thread_count ; ++index)							/*Segunda fase: Espera por cada uno de los threads*/	
-		pthread_join(threads[index], NULL); 														
+	for(size_t index = 0; index < thread_count ; ++index)	
+	{
+		pthread_join(threads[index], NULL); 
+	}						
+															
 	
 	free(private_data);				
 	free(threads);	
@@ -174,12 +177,12 @@ void* finish_race(void* data)
 	sem_wait(&shared_data->batons[private_data->my_team_number]);
 	usleep(1000 * shared_data->stage2_duration);
 	
-	pthread_mutex_lock(&shared_data->position_mutex);
-	if(&shared_data->position < 3)
-	{
+	pthread_mutex_lock(&shared_data->stdout_mutex);
+	//if(shared_data->position < 3)
+	//{
 		printf("Place: %zu: team: %zu\n", ++shared_data->position, private_data->my_team_number);
-	}
-	pthread_mutex_unlock(&shared_data->position_mutex);
+	//}
+	pthread_mutex_unlock(&shared_data->stdout_mutex);
 	return NULL;
 }
 
