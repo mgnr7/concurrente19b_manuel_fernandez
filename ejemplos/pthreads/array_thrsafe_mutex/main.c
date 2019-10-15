@@ -4,7 +4,7 @@
 #include <time.h>
 #include "array.h"
 
-void print_array(const char* name, const array_t* array);
+void print_array(const char* name, array_t *array);
 void test_arrays(array_t* array1, array_t* array2);
 void* test_array(void* data);
 
@@ -24,7 +24,7 @@ int main()
 	return 0;
 }
 
-void print_array(const char* name, const array_t* array)
+void print_array(const char* name, array_t* array)
 {
 	printf("%s: %zu elements\n", name, array_get_count(array));
 	fflush(stdout);
@@ -48,7 +48,7 @@ void test_arrays(array_t* array1, array_t* array2)
 
 void* test_array(void* data)
 {
-	array_t* array = (array_t)data;
+	array_t* array = (array_t*)data;
 
 	for ( size_t index = 0, count = 1000 + rand() % 10000; index < count; ++index )
 	{
