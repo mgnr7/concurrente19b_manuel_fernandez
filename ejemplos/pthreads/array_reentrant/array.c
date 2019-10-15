@@ -14,20 +14,20 @@ array_t* array_create(size_t capacity)
 {
 	assert(capacity);
 	array_t* array = (array_t*)calloc(1, sizeof(array_t)); 
-	if(array != NULL)
+	if(array == NULL)
 	{
-		array->array_capacity = capacity;
-		array->array_count = 0;
-		array->array_elements = (void**)malloc( capacity * sizeof(void*) );
-		if(array->array_elements == NULL)
-		{
-			free(array);
-			return -1;
-		}
-		return array; 	
+		return NULL;
 	}
-
-	return -1;
+		
+	array->array_capacity = capacity;
+	array->array_count = 0;
+	array->array_elements = (void**)malloc( capacity * sizeof(void*) );
+	if(array->array_elements == NULL)
+	{
+		free(array);
+		return NULL;
+	}
+	return array; 	
 }
 
 void array_destroy(array_t* array)
