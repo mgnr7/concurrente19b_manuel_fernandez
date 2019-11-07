@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
 		if(!error)
 		{
 			if(shared_data->errores == 0)
-			fprintf("VALIDO");
+				fprintf(stderr, "VALIDO");
 		}
 	}
 	
