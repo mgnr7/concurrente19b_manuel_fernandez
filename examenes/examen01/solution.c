@@ -10,6 +10,7 @@ typedef struct
 	int tamano;
 	int cantidad_threads;
 	pthread_mutex_t std_mutex;
+	size_t errores;
 } shared_data_t;
 
 typedef struct
@@ -36,24 +37,20 @@ int main(int argc, char* argv[])
 	if(shared_data == NULL)
 		fprintf(stderr, "no se pudo reservar datos compartidos");
 		
-	shared_data->cantidad_threads = sysconf(_SC_NPROCESSORS_ONLN);
+	shared_data->cantidad_threads = sysconf(_SC_NPROCESSORS_ONLN);		/*cantidad de threads = cantidad de CPUs disponibles*/
+	shared_data->errores = 0;
 	
 	pthread_mutex_init(&shared_data->std_mutex, NULL);
 	
 	int error = read_terrain(shared_data);
-	if(error)
+	if(!error)
 	{
-		pthread_mutex_destroy(&shared_data->std_mutex);
-		free(shared_data);
-		return 0;
-	}	
-	
-	error = create_threads(shared_data);
-	if(error)
-	{
-		pthread_mutex_destroy(&shared_data->std_mutex);
-		free(shared_data);
-		return 0;
+		error = create_threads(shared_data);
+		if(!error)
+		{
+			if(shared_data->errores == 0)
+			fprintf("VALIDO");
+		}
 	}
 	
 	pthread_mutex_destroy(&shared_data->std_mutex);
@@ -115,11 +112,12 @@ int create_threads(shared_data_t* shared_data)
 		free(threads);
 		return 2;
 	 }
+	 
 		
-	
+	/*Se reserva memoria en private_data para almacernar el arreglo para almacenar los valores leidos en cada fila, columna o bloque*/
 	for(int index = 0; index < shared_data->cantidad_threads; ++index)
-	{
-		private_data[index].valores_leidos = (char*) calloc(shared_data->tamano * shared_data->tamano, sizeof(char));
+	{	
+		private_data[index].valores_leidos = (char*) calloc(shared_data->tamano * shared_data->tamano, sizeof(char));			
 		if(private_data[index].valores_leidos == NULL)
 		{
 			for(int j = index; j >= 0; j--)
@@ -132,6 +130,7 @@ int create_threads(shared_data_t* shared_data)
 		
 		private_data[index].shared_data = shared_data;
 	}
+	
 	
 	for(int index = 0; index < shared_data->cantidad_threads; ++index)
 	{
@@ -154,8 +153,11 @@ void* run (void* data)
 	private_data_t* private_data = (private_data_t*) data;
 	shared_data_t* shared_data = private_data->shared_data;
 	leer_filas(private_data, shared_data);
+	/*barrera*/
 	leer_columnas(private_data, shared_data);
+	/*barrera*/
 	leer_bloque(private_data, shared_data);
+	
 	return NULL;
 }
 
@@ -172,12 +174,14 @@ int leer_filas(private_data_t* private_data, shared_data_t* shared_data)
 				if(agregado(0, columna, private_data->valores_leidos[columna], private_data))
 				{
 					pthread_mutex_lock(&shared_data->std_mutex);
+					shared_data->errores += 1;
 					printf("f %d , %d\n" , fila, columna);
 					pthread_mutex_unlock(&shared_data->std_mutex);
 				}
 				if(no_es_numero(&private_data->valores_leidos[columna]))
 				{
 					pthread_mutex_lock(&shared_data->std_mutex);
+					shared_data->errores += 1;
 					printf("e %d,%d\n", fila, columna);
 					pthread_mutex_unlock(&shared_data->std_mutex);
 				}
@@ -202,12 +206,14 @@ int leer_columnas(private_data_t* private_data, shared_data_t* shared_data)
 			if(no_es_numero(&private_data->valores_leidos[columna]))
 			{
 				pthread_mutex_lock(&shared_data->std_mutex);
+				shared_data->errores += 1;
 				printf("e %d, %d\n", fila, columna);
 				pthread_mutex_unlock(&shared_data->std_mutex);
 			}	
 			else if(private_data->valores_leidos[columna] != 0 && agregado(0, columna, private_data->valores_leidos[columna], private_data))
 			{
 				pthread_mutex_lock(&shared_data->std_mutex);
+				shared_data->errores += 1;
 				printf("C %d , %d\n" , fila, columna);
 				pthread_mutex_unlock(&shared_data->std_mutex);
 			}
@@ -243,6 +249,7 @@ int leer_bloque(private_data_t* private_data, shared_data_t* shared_data)
 					if(agregado(0, contador, private_data->valores_leidos[contador], private_data))
 					{
 						pthread_mutex_lock(&shared_data->std_mutex);
+						shared_data->errores += 1;
 						printf("b %d , %d\n" , fila, columna);
 						pthread_mutex_unlock(&shared_data->std_mutex);
 					}
