@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include <semaphore.h>
 
 typedef struct
 {
@@ -11,6 +11,7 @@ typedef struct
 	int cantidad_threads;
 	pthread_mutex_t std_mutex;
 	size_t errores;
+	pthread_barrier_t barrera;
 } shared_data_t;
 
 typedef struct
@@ -41,6 +42,7 @@ int main(int argc, char* argv[])
 	shared_data->errores = 0;
 	
 	pthread_mutex_init(&shared_data->std_mutex, NULL);
+	pthread_barrier_init(&shared_data->barrera, NULL , shared_data->cantidad_threads);
 	
 	int error = read_terrain(shared_data);
 	if(!error)
@@ -52,7 +54,7 @@ int main(int argc, char* argv[])
 				fprintf(stderr, "VALIDO");
 		}
 	}
-	
+	pthread_barrier_destroy(&shared_data->barrera);
 	pthread_mutex_destroy(&shared_data->std_mutex);
 	free(shared_data);
 	return 0;
@@ -86,6 +88,7 @@ int read_terrain(shared_data_t* shared_data)
 			for(int c = 1; c <= (shared_data->tamano * shared_data->tamano); c++)
 			{
 				shared_data->tablero[r][c] = getchar();
+				getchar();
 				getchar(); //espacio en blanco
 			}
 			getchar(); //cambio de linea
@@ -154,8 +157,12 @@ void* run (void* data)
 	shared_data_t* shared_data = private_data->shared_data;
 	leer_filas(private_data, shared_data);
 	/*barrera*/
+	pthread_barrier_wait(&shared_data->barrera);
+	
 	leer_columnas(private_data, shared_data);
 	/*barrera*/
+	pthread_barrier_wait(&shared_data->barrera);
+	
 	leer_bloque(private_data, shared_data);
 	
 	return NULL;
