@@ -91,7 +91,7 @@ int read_terrain(shared_data_t* shared_data)
 			
 			for(int c = 0; c < (shared_data->tamano * shared_data->tamano); c++)
 			{
-				if ( scanf("%d", &shared_data->tablero[r][c]) != 1 ) 
+				if ( scanf("%d", shared_data->tablero[r][c]) != 1 ) 
 				{
 					printf("e %d, %d \n", r , c);
 					getchar();
