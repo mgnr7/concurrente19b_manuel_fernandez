@@ -149,42 +149,69 @@ int main(int argc, char* argv[])
 			'I' : create_thread(impatient(id++))
 			EOF : return 
 	 */
+	size_t initial_size;
+	initial_size = 10;
+	private_data_t* private_data = (private_data_t*) calloc(initial_size, sizeof(private_data_t));
+		if(private_data == NULL)
+		{
+			return (void)fprintf(stderr, "error: could not allocate memory\n"), 6;
+		}
+		
+	size_t current_size;
+	current_size = initial_size;	
 	
 	size_t id;
 	id = 0;
 	size_t bool;
 	bool = 1;
+	
 	while(bool)
 	{
 		pthread_t thread;
+		private_data[id].id = id;
 		
-		private_data_t* private_data = (private_data_t*) calloc(1, sizeof(private_data_t));
-		if(private_data == NULL)
-		{
-			return (void)fprintf(stderr, "error: could not allocate memory\n"), 6;
-		}
-			
+		private_data[id].shared_data = shared_data;
 		
-		private_data->id = id++;
-		private_data->shared_data = shared_data;
-		
-		char c = getchar();
+		char c;
+		getchar();
+		c = getchar();
 		
 		switch (c){
 			case 'P':
-				pthread_create(&thread, NULL, patient, &private_data);
+				--current_size;
+				pthread_create(&thread, NULL, patient, &private_data[id]);
 				break;
 			case 'I':
-				pthread_create(&thread, NULL, impatient, &private_data);
+				--current_size;
+				pthread_create(&thread, NULL, impatient, &private_data[id]);
 				break;
-			case EOF:
+			/*case EOF:
+				bool = 0;
+				break;
+			*/
+			default:
+				printf("leaving the simulation\n");
 				bool = 0;
 				break;
 		}
 		
-		free(private_data);
+		id++;
+		
+		
+		if(current_size == 0)
+		{
+			private_data = (private_data_t*) realloc(private_data, initial_size + 10);
+			initial_size = initial_size + 10;
+			current_size = initial_size;
+		}
+		
+		
+		
 	}
 	
+	//Hacer Join antes de borrar memoria
+	
+	free(private_data);
 	pthread_mutex_destroy(&shared_data->mutex);
 	free(shared_data->rest_queue);
 	free(shared_data->count);
@@ -286,18 +313,20 @@ void* impatient(void* data)
 	size_t hungry;
 	hungry = 1;
 	
-	if(shared_data->count[private_data->id % shared_data->rest_count] > 0)
+	size_t favorite = private_data->id % shared_data->rest_count;
+	
+	if(shared_data->count[favorite] > 0)
 	{
 		pthread_mutex_lock(&shared_data->mutex);
-		--shared_data->count[private_data->id % shared_data->rest_count];
+		--shared_data->count[favorite];
 		pthread_mutex_unlock(&shared_data->mutex);
 		
-		sem_wait(&shared_data->rest_queue[private_data->id % shared_data->rest_count]);
+		sem_wait(&shared_data->rest_queue[favorite]);
 		//eat();
-		sem_post(&shared_data->rest_queue[private_data->id % shared_data->rest_count]);
+		sem_post(&shared_data->rest_queue[favorite]);
 		
 		pthread_mutex_lock(&shared_data->mutex);
-		++shared_data->count[private_data->id % shared_data->rest_count];
+		++shared_data->count[favorite];
 		pthread_mutex_unlock(&shared_data->mutex);
 		
 		hungry = 0;
@@ -306,7 +335,7 @@ void* impatient(void* data)
 	{
 		//walk();
 		size_t minimum = 0;
-		for(size_t index = 0; index < shared_data->rest_count; ++index)
+		for(size_t index = favorite + 1; index < shared_data->rest_count; ++index)
 		{
 			if(shared_data->count[index] > 0)
 			{
@@ -333,6 +362,36 @@ void* impatient(void* data)
 				}
 			}
 		}
+		
+		for(size_t index = 0; index < favorite; ++index)
+		{
+			if(shared_data->count[index] > 0)
+			{
+				pthread_mutex_lock(&shared_data->mutex);
+				--shared_data->count[index];
+				pthread_mutex_unlock(&shared_data->mutex);
+				
+				sem_wait(&shared_data->rest_queue[index]);
+				//eat();
+				sem_post(&shared_data->rest_queue[index]);
+				
+				pthread_mutex_lock(&shared_data->mutex);
+				++shared_data->count[index];
+				pthread_mutex_unlock(&shared_data->mutex);
+				
+				hungry = 0;
+			}
+			else
+			{
+				if(shared_data->count[minimum] > shared_data->count[index])
+				{
+					minimum = index;
+					//walk();
+				}
+			}
+		}
+		
+		/*if all restaurants are full, wait for the restaurant with the shorter wait*/
 		
 		if(hungry)
 		{

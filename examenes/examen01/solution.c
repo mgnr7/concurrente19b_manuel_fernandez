@@ -30,7 +30,7 @@ int leer_columnas(private_data_t* private_data, shared_data_t* shared_data);
 int leer_bloque(private_data_t* private_data, shared_data_t* shared_data);
 int agregado(int incio, int fin, char valor, private_data_t* private_data);
 int no_es_numero(char* valor);
-
+int min(int a, int b);
 
 int main(int argc, char* argv[])
 {
@@ -62,8 +62,12 @@ int main(int argc, char* argv[])
 
 int read_terrain(shared_data_t* shared_data)
 {
-		shared_data->tamano = getchar();
-		getchar(); //salto de linea
+		if ( scanf("%d", &shared_data->tamano) != 1 )
+		return 1;
+		
+		getchar();
+
+
 		shared_data->tablero = calloc((shared_data->tamano * shared_data->tamano), sizeof(char*));
 		
 		if(shared_data->tablero == NULL)
@@ -85,13 +89,15 @@ int read_terrain(shared_data_t* shared_data)
 				return 2;
 			}
 			
-			for(int c = 1; c <= (shared_data->tamano * shared_data->tamano); c++)
+			for(int c = 0; c < (shared_data->tamano * shared_data->tamano); c++)
 			{
-				shared_data->tablero[r][c] = getchar();
-				getchar();
-				getchar(); //espacio en blanco
+				if ( scanf("%d", &shared_data->tablero[r][c]) != 1 ) 
+				{
+					printf("e %d, %d \n", r , c);
+					getchar();
+				}
 			}
-			getchar(); //cambio de linea
+			
 		}
 		
 		return 0;
@@ -185,13 +191,6 @@ int leer_filas(private_data_t* private_data, shared_data_t* shared_data)
 					printf("f %d , %d\n" , fila, columna);
 					pthread_mutex_unlock(&shared_data->std_mutex);
 				}
-				if(no_es_numero(&private_data->valores_leidos[columna]))
-				{
-					pthread_mutex_lock(&shared_data->std_mutex);
-					shared_data->errores += 1;
-					printf("e %d,%d\n", fila, columna);
-					pthread_mutex_unlock(&shared_data->std_mutex);
-				}
 			}
 		}
 		
@@ -209,21 +208,17 @@ int leer_columnas(private_data_t* private_data, shared_data_t* shared_data)
 	{
 		for(int fila = 0; fila < n; fila++)
 		{
-			private_data->valores_leidos[columna] = shared_data->tablero[fila][columna];
-			if(no_es_numero(&private_data->valores_leidos[columna]))
-			{
-				pthread_mutex_lock(&shared_data->std_mutex);
-				shared_data->errores += 1;
-				printf("e %d, %d\n", fila, columna);
-				pthread_mutex_unlock(&shared_data->std_mutex);
-			}	
-			else if(private_data->valores_leidos[columna] != 0 && agregado(0, columna, private_data->valores_leidos[columna], private_data))
-			{
-				pthread_mutex_lock(&shared_data->std_mutex);
-				shared_data->errores += 1;
-				printf("C %d , %d\n" , fila, columna);
-				pthread_mutex_unlock(&shared_data->std_mutex);
-			}
+			private_data->valores_leidos[fila] = shared_data->tablero[fila][columna];
+			if(private_data->valores_leidos[fila] != 0 )
+				{
+					if(agregado(0, fila, private_data->valores_leidos[fila], private_data))
+					{
+						pthread_mutex_lock(&shared_data->std_mutex);
+						shared_data->errores += 1;
+						printf("C %d , %d\n" , fila, columna);
+						pthread_mutex_unlock(&shared_data->std_mutex);
+					}
+				}
 			
 		}
 		
@@ -241,40 +236,51 @@ int leer_bloque(private_data_t* private_data, shared_data_t* shared_data)
 	int n; 
 	n = shared_data->tamano;
 	int contador;
-	contador = 0;
-	
-	for(int fila_bloque = (private_data->indice * n); fila_bloque < m; fila_bloque += (shared_data->cantidad_threads*n)) //vertical
+	contador = 0;	
+	int start;
+	int end;
+		
+	start = private_data->indice * abs(m/shared_data->cantidad_threads) + min(private_data->indice, m % shared_data->cantidad_threads);
+	end = (private_data->indice + 1) * abs(m/shared_data->cantidad_threads) + min((private_data->indice + 1), m % shared_data->cantidad_threads);
+		
+	int col_count;
+	col_count = 0;
+			
+	for(int itr = start; itr < end; itr++)
 	{
-		for(int columna_bloque = (private_data->indice * n); columna_bloque < m; columna_bloque += (shared_data->cantidad_threads*n))	//horizontal
+		for(int fila = start ; fila < end ; fila++)
 		{
-			for(int fila = fila_bloque; fila < fila_bloque+n; fila++)
+			for(int columna = n * col_count; columna < (n * col_count) + n; columna++)
 			{
-				for(int columna = columna_bloque; columna < columna_bloque+n; columna++)
+				private_data->valores_leidos[contador] = shared_data->tablero[fila][columna];
+				contador ++;
+				if(private_data->valores_leidos[contador -1] != 0 )
 				{
-					private_data->valores_leidos[contador] = shared_data->tablero[fila][columna];
-					contador++;
-					if(agregado(0, contador, private_data->valores_leidos[contador], private_data))
+					if(agregado(0, contador-1, private_data->valores_leidos[contador-1], private_data))
 					{
 						pthread_mutex_lock(&shared_data->std_mutex);
 						shared_data->errores += 1;
-						printf("b %d , %d\n" , fila, columna);
+						printf("B %d , %d\n" , fila, columna);
 						pthread_mutex_unlock(&shared_data->std_mutex);
 					}
 				}
 			}
-			contador = 0;
-			private_data->valores_leidos = (char*)realloc(private_data->valores_leidos, 0);
-			private_data->valores_leidos = (char*)realloc(private_data->valores_leidos, n);
 		}
-	}	
-	
+
+		private_data->valores_leidos = (char*)realloc(private_data->valores_leidos, 0);
+		private_data->valores_leidos = (char*)realloc(private_data->valores_leidos, n);
+						
+		contador = 0;
+		col_count++;
+	}
+			
 	return 0;
 }
 
 
 int agregado(int inicio, int fin, char valor, private_data_t* private_data)
 {
-	for(int index = inicio; index <= fin; index++)
+	for(int index = inicio; index < fin; index++)
 	{
 		if(private_data->valores_leidos[index] == valor)
 			return 1;
@@ -282,15 +288,16 @@ int agregado(int inicio, int fin, char valor, private_data_t* private_data)
 	return 0;
 }
 
-int no_es_numero(char* valor)
+int min(int a, int b)
 {
-	size_t numero;
-	numero = strtoull(valor, NULL, 10);
-	if(numero != 0)
+	if(a < b)
 	{
-		return 1;
+		return a;
 	}
-	return 0;
+		
+	else{
+		return b;
+	}
 }
 
 
