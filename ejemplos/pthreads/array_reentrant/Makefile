@@ -23,3 +23,7 @@ $(EXECUTABLE): $(OBJECTS)
 .PHONY: clean
 clean:
 	rm -rf $(EXECUTABLE) *.o *.dSYM *~
+
+.PHONY: gitignore
+gitignore:
+	echo $(EXECUTABLE) > .gitignore
