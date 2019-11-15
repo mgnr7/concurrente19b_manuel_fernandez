@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 	
 	
 	
-	std::cout << "hello from main thread "<< my_rank << " of "<< process_count << " on " << hostname << std::endl;
+	std::cout << "hello from main thread "<< my_rank << " of "<< process_count << " on " << hostname << "\n"<< std::endl;
 	
 	MPI_Finalize();
 }
