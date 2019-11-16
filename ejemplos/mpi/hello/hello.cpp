@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 	
 	char hostname[MPI_MAX_PROCESSOR_NAME];
 	int hostname_length = -1;
-	MPI_Get_processor_name(hostname, hostname_length);
+	MPI_Get_processor_name(hostname, &hostname_length);
 	
 	
 	
