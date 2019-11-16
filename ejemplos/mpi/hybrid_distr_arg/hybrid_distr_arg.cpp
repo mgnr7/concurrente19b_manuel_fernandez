@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 			
 			const int my_thread_width = my_thread_finish - my_thread_start;
 			
-			#pragma omp criticall(stdout)
+			#pragma omp critical(stdout)
 			std::out << "\t" << hostname << ":" << my_rank << ":" << omp_get_thread_num() << ": range ["
 				<< my_thread_start << " , " << ++my_thread_finish << "[ size " << my_thread_width << std::endl;
 		

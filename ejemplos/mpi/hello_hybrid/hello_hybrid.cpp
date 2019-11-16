@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 	
 	#pragma omp parallel default(none) shared(my_rank, hostname, std::cout)
 	{
-		#pragma omp criticall(stdout)
+		#pragma omp critical(stdout)
 		std::cout << "\t hello from thread "<< omp_get_thread_num() << " of " << omp_get_num_threads() 
 			<< " of process " << my_rank << " on " << hostname << "\n"<< std::endl;
 	}
