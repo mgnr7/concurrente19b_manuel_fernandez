@@ -6,17 +6,17 @@
 
 typedef struct
 {
-	char** tablero;
+	int** tablero;
 	int tamano;
 	int cantidad_threads;
 	pthread_mutex_t std_mutex;
-	size_t errores;
+	int errores;
 	pthread_barrier_t barrera;
 } shared_data_t;
 
 typedef struct
 {
-	char* valores_leidos;
+	int* valores_leidos;
 	shared_data_t* shared_data;
 	int indice;
 } private_data_t;
@@ -63,12 +63,12 @@ int main(int argc, char* argv[])
 int read_terrain(shared_data_t* shared_data)
 {
 		if ( scanf("%d", &shared_data->tamano) != 1 )
-		return 1;
+			return 1;
 		
 		getchar();
 
 
-		shared_data->tablero = calloc((shared_data->tamano * shared_data->tamano), sizeof(char*));
+		shared_data->tablero = (int**)calloc((shared_data->tamano * shared_data->tamano), sizeof(int*));
 		
 		if(shared_data->tablero == NULL)
 		{
@@ -78,7 +78,7 @@ int read_terrain(shared_data_t* shared_data)
 		
 		for(int r = 0; r < (shared_data->tamano * shared_data->tamano); r++)
 		{
-			shared_data->tablero[r] = (char*)calloc((shared_data->tamano * shared_data->tamano), sizeof(char));
+			shared_data->tablero[r] = (int*)calloc((shared_data->tamano * shared_data->tamano), sizeof(int));
 			if(shared_data->tablero[r] == NULL)
 			{
 				for(int j = r; j >= 0; j--)
@@ -91,9 +91,9 @@ int read_terrain(shared_data_t* shared_data)
 			
 			for(int c = 0; c < (shared_data->tamano * shared_data->tamano); c++)
 			{
-				if ( scanf("%d", shared_data->tablero[r][c]) != 1 ) 
+				if ( scanf("%d", &shared_data->tablero[r][c]) != 1 ) 
 				{
-					printf("e %d, %d \n", r , c);
+					printf("e %d, %d \n", r + 1, c + 1);
 					getchar();
 				}
 			}
@@ -126,7 +126,7 @@ int create_threads(shared_data_t* shared_data)
 	/*Se reserva memoria en private_data para almacernar el arreglo para almacenar los valores leidos en cada fila, columna o bloque*/
 	for(int index = 0; index < shared_data->cantidad_threads; ++index)
 	{	
-		private_data[index].valores_leidos = (char*) calloc(shared_data->tamano * shared_data->tamano, sizeof(char));			
+		private_data[index].valores_leidos = (int*) calloc(shared_data->tamano * shared_data->tamano, sizeof(int));			
 		if(private_data[index].valores_leidos == NULL)
 		{
 			for(int j = index; j >= 0; j--)
@@ -139,7 +139,6 @@ int create_threads(shared_data_t* shared_data)
 		
 		private_data[index].shared_data = shared_data;
 	}
-	
 	
 	for(int index = 0; index < shared_data->cantidad_threads; ++index)
 	{
@@ -188,14 +187,15 @@ int leer_filas(private_data_t* private_data, shared_data_t* shared_data)
 				{
 					pthread_mutex_lock(&shared_data->std_mutex);
 					shared_data->errores += 1;
-					printf("f %d , %d\n" , fila, columna);
+					printf("f %d , %d\n" , fila + 1 , columna + 1);
 					pthread_mutex_unlock(&shared_data->std_mutex);
 				}
 			}
 		}
 		
-		private_data->valores_leidos = (char*)realloc(private_data->valores_leidos, 0);
-		private_data->valores_leidos = (char*)realloc(private_data->valores_leidos, n);
+		free(private_data->valores_leidos);
+		private_data->valores_leidos = (int*)calloc(n, sizeof(int));
+		
 	}
 	
 	return 0;
@@ -215,15 +215,15 @@ int leer_columnas(private_data_t* private_data, shared_data_t* shared_data)
 					{
 						pthread_mutex_lock(&shared_data->std_mutex);
 						shared_data->errores += 1;
-						printf("C %d , %d\n" , fila, columna);
+						printf("c %d , %d\n" , fila + 1, columna + 1);
 						pthread_mutex_unlock(&shared_data->std_mutex);
 					}
 				}
 			
 		}
 		
-		private_data->valores_leidos = (char*)realloc(private_data->valores_leidos, 0);
-		private_data->valores_leidos = (char*)realloc(private_data->valores_leidos, n);
+		free(private_data->valores_leidos);
+		private_data->valores_leidos = (int*)calloc(n, sizeof(int));
 	}
 	
 	return 0;
@@ -253,27 +253,30 @@ int leer_bloque(private_data_t* private_data, shared_data_t* shared_data)
 			for(int columna = n * col_count; columna < (n * col_count) + n; columna++)
 			{
 				private_data->valores_leidos[contador] = shared_data->tablero[fila][columna];
-				contador ++;
-				if(private_data->valores_leidos[contador -1] != 0 )
+
+				if(private_data->valores_leidos[contador] != 0 )
 				{
-					if(agregado(0, contador-1, private_data->valores_leidos[contador-1], private_data))
+					if(agregado(0, contador, private_data->valores_leidos[contador], private_data))
 					{
 						pthread_mutex_lock(&shared_data->std_mutex);
 						shared_data->errores += 1;
-						printf("B %d , %d\n" , fila, columna);
+						printf("b %d , %d\n" , fila + 1, columna + 1);
 						pthread_mutex_unlock(&shared_data->std_mutex);
 					}
 				}
+				
+				contador ++;
 			}
 		}
 
-		private_data->valores_leidos = (char*)realloc(private_data->valores_leidos, 0);
-		private_data->valores_leidos = (char*)realloc(private_data->valores_leidos, n);
+		free(private_data->valores_leidos);
+		private_data->valores_leidos = (int*)calloc(m, sizeof(int));
 						
 		contador = 0;
 		col_count++;
 	}
-			
+	
+	free(private_data->valores_leidos);		
 	return 0;
 }
 
