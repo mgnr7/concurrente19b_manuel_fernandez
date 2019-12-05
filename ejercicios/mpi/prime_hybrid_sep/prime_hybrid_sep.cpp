@@ -16,6 +16,19 @@ int calculate_finish(int worker_id, int workers, int finish, int begin)
 	return calculate_start(worker_id + 1, workers, finish, begin);
 }
 
+bool is_prime(size_t number)
+{
+	if ( number < 2 ) return false;
+	if ( number == 2 ) return true;
+	if ( number % 2 == 0 ) return false;
+
+	for ( size_t i = 3, last = (size_t)(double)sqrt(number); i <= last; i += 2 )
+		if ( number % i == 0 )
+			return false;
+
+	return true;
+}
+
 int main(int argc, char* argv[])
 {
 	MPI_Init(&argc, &argv);
@@ -61,35 +74,20 @@ int main(int argc, char* argv[])
 		
 	const int my_start = calculate_start( my_rank, process_count, global_finish, global_start);
 	const int my_finish = calculate_finish( my_rank, process_count, global_finish, global_start);
-	const int my_width = my_finish - my_start;
+	int prime_count = -1;
 	
 	double elapsed = MPI_Wtime() - start_time;
-	
-	// hostname1:0: range [3, 12[ size 9
-	std::cout << hostname << ":" << my_rank << ": range [" << my_start 
-		<< ", " << my_finish << "[ size " << my_width << " in " << std::setprecision(9) << elapsed << " with " << << " threads" << std::endl;
 
-
-	#pragma omp parallel default(none) shared(my_rank, hostname, std::cout)
+	#pragma omp parallel for num_threads (thread_count) default (none) shared(prime_count, my_start, my_finish) reduction(+: prime_count)
+	for ( size_t current = my_start; current <= my_finish; ++current )
 	{
-		int my_thread_start = 0;
-		int my_thread_finish = 0;
-		
-		#pragma omp for
-		for ( int index = my_start; index < my_finish; ++index )
-		{
-			if ( my_thread_start == 0 )
-				my_thread_start = index;
-			my_thread_finish = index;
-		}
-		
-		const int my_thread_width = ++my_thread_finish - my_thread_start;
-		
-		// hostname1:0.0: range [3,6[ size 3
-		#pragma omp critical(stdout)
-		std::cout << '\t' << hostname << ":" << my_rank << ":" << omp_get_thread_num() << ": range ["
-			<< my_thread_start << "," << my_thread_finish << "[ size " << my_thread_width << std::endl;
+		if ( is_prime(current) )
+				++prime_count;	
 	}
+	
+	std::cout << "Process " << my_rank << "on hostname"<< hostname << "found "<< prime_count 
+	<< "primes in range [" << my_start << ", " << my_finish << "]" << " in " 
+	<< std::setprecision(9) << elapsed << "s with " << << " threads" << std::endl;
 	
 	MPI_Finalize();
 }
