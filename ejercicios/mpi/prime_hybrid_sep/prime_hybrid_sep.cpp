@@ -85,8 +85,8 @@ int main(int argc, char* argv[])
 				++prime_count;	
 	}
 	
-	std::cout << "Process " << my_rank << "on hostname"<< hostname << "found "<< prime_count 
-	<< "primes in range [" << my_start << ", " << my_finish << "]" << " in " 
+	std::cout << "Process " << my_rank << "  on hostname "<< hostname << "  found "<< prime_count 
+	<< " primes in range [" << my_start << ", " << my_finish << "]" << " in " 
 	<< std::setprecision(9) << elapsed << "s with " << thread_count<< " threads" << std::endl;
 	
 	MPI_Finalize();
