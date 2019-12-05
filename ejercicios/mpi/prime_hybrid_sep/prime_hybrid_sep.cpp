@@ -34,6 +34,8 @@ int main(int argc, char* argv[])
 	int global_finish = 0;
 	double start_time = MPI_Wtime();
 	
+	int thread_count = omp_get_max_threads();
+	
 	if ( argc >= 3 )
 	{
 		global_start = atoi(argv[1]);
@@ -65,7 +67,7 @@ int main(int argc, char* argv[])
 	
 	// hostname1:0: range [3, 12[ size 9
 	std::cout << hostname << ":" << my_rank << ": range [" << my_start 
-		<< ", " << my_finish << "[ size " << my_width << " in " << std::setprecision(9) << elapsed << std::endl;
+		<< ", " << my_finish << "[ size " << my_width << " in " << std::setprecision(9) << elapsed << " with " << << " threads" << std::endl;
 
 
 	#pragma omp parallel default(none) shared(my_rank, hostname, std::cout)

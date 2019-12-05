@@ -33,22 +33,21 @@ int main(int argc, char* argv[])
 	size_t prime_count = 0;
 	
 	
-/*	
+
 	#pragma omp parallel for num_threads (thread_count) schedule(static) default (none) shared(limit) reduction(+: prime_count)
 	for ( size_t current = 2; current <= limit; ++current )
 	{
 		if ( is_prime(current) )
 				++prime_count;	
 	}
-*/
-/*
+
 	#pragma omp parallel for num_threads (thread_count) schedule(dynamic) default (none) shared(limit) reduction(+: prime_count)
 	for ( size_t current = 2; current <= limit; ++current )
 	{
 		if ( is_prime(current) )
 				++prime_count;	
 	}
-*/
+
 
 	#pragma omp parallel for num_threads (thread_count) schedule(guided) default (none) shared(limit) reduction(+: prime_count)
 	for ( size_t current = 2; current <= limit; ++current )
