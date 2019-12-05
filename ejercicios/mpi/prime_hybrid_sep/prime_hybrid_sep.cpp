@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 	
 	double elapsed = MPI_Wtime() - start_time;
 
-	#pragma omp parallel for num_threads (thread_count) default (none) shared(prime_count) reduction(+: prime_count)
+	#pragma omp parallel for num_threads (thread_count) default (none) reduction(+: prime_count)
 	for ( int current = my_start; current <= my_finish; ++current )
 	{
 		if ( is_prime(current) )
