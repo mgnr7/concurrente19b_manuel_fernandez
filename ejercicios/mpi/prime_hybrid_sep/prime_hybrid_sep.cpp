@@ -78,8 +78,8 @@ int main(int argc, char* argv[])
 	
 	double elapsed = MPI_Wtime() - start_time;
 
-	#pragma omp parallel for num_threads (thread_count) default (none) shared(prime_count, my_start, my_finish) reduction(+: prime_count)
-	for ( size_t current = my_start; current <= my_finish; ++current )
+	#pragma omp parallel for num_threads (thread_count) default (none) shared(prime_count) reduction(+: prime_count)
+	for ( int current = my_start; current <= my_finish; ++current )
 	{
 		if ( is_prime(current) )
 				++prime_count;	
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 	
 	std::cout << "Process " << my_rank << "on hostname"<< hostname << "found "<< prime_count 
 	<< "primes in range [" << my_start << ", " << my_finish << "]" << " in " 
-	<< std::setprecision(9) << elapsed << "s with " << << " threads" << std::endl;
+	<< std::setprecision(9) << elapsed << "s with " << thread_count<< " threads" << std::endl;
 	
 	MPI_Finalize();
 }
