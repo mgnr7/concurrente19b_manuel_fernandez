@@ -15,7 +15,7 @@ int main (int argc, char*argv[])	/*RECIBE CANTIDAD DE TRABAJADORES*/
 	double a;		/*punto inferior*/
 	double b;		/*punto superior*/
 	int n;			/*cantidad de trapecios*/
-	double result;	/*resultado*/
+	long double result;	/*resultado*/
 	int w;			/*trabajadores*/
 	
 	w = omp_get_max_threads();
@@ -56,7 +56,7 @@ int main (int argc, char*argv[])	/*RECIBE CANTIDAD DE TRABAJADORES*/
 	#pragma omp parallel for num_threads(w) default(none) shared(a, b, n, w, result)
 		for(int index = 0; index < w; ++index)
 		{
-			double local_result;
+			long double local_result;
 			double local_a;
 			double local_b;
 			int local_n;
@@ -71,7 +71,7 @@ int main (int argc, char*argv[])	/*RECIBE CANTIDAD DE TRABAJADORES*/
 			
 	
 			
-	printf("Total Area: %lf \n", result);
+	printf("Total Area: %0.Lf \n", result);
 	struct timespec end_time;
 	clock_gettime(CLOCK_MONOTONIC, &end_time);	
 	double elapsed_seconds = end_time.tv_sec - start_time.tv_sec + 1e-9 *(end_time.tv_nsec - start_time.tv_nsec);

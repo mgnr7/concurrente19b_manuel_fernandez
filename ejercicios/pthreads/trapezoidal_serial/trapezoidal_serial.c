@@ -4,8 +4,8 @@
 #include <time.h>
 #include <math.h>
 
-double trapezoidal_area(double a, double b, int n);	/*Calcula la integral de la funcion "f" en el intervalo [a, b] con "n" trapecios*/
-double imagen(double x);							/*Devuelve la imagen f(x)*/
+long double trapezoidal_area(double a, double b, int n);	/*Calcula la integral de la funcion "f" en el intervalo [a, b] con "n" trapecios*/
+long double imagen(double x);							/*Devuelve la imagen f(x)*/
 
 int main (int argc, char*argv[])
 {
@@ -13,7 +13,7 @@ int main (int argc, char*argv[])
 	double a;		/*punto inferior*/
 	double b;		/*punto superior*/
 	int n;			/*cantidad de trapecios*/
-	double result;	/*resultado*/
+	long double result;	/*resultado*/
 	
 	if(argc != 4)
 	{
@@ -42,7 +42,7 @@ int main (int argc, char*argv[])
 		clock_gettime(CLOCK_MONOTONIC, &start_time);						
 		
 		result = trapezoidal_area(a, b, n);		/*Invocacion a trapezoidal_Area*/
-		printf("Total Area: %lf \n", result);
+		printf("Total Area: %0.Lf \n", result);
 		struct timespec end_time;
 		clock_gettime(CLOCK_MONOTONIC, &end_time);	
 		double elapsed_seconds = end_time.tv_sec - start_time.tv_sec + 1e-9 *(end_time.tv_nsec - start_time.tv_nsec);
@@ -51,7 +51,7 @@ int main (int argc, char*argv[])
 	return 0;
 }
 
-double trapezoidal_area(double a, double b, int n)
+long double trapezoidal_area(double a, double b, int n)
 {
 	/*Determinar el ancho de cada trapecio:
 	 * (b - a) / n
@@ -65,10 +65,10 @@ double trapezoidal_area(double a, double b, int n)
 	 * for(index = ancho_trapecio; index < b; index + ancho_trapecio)
 	 * -Finalemente al resultado de las sumas hay que multiplicarlo por (ancho_trapecio / 2)
 	 * */	 
-	 double trapezoid_width;
+	 long double trapezoid_width;
 	 trapezoid_width = (b - a) / n;
 	 
-	 double result;
+	 long double result;
 	 result = imagen(a);
 	 result += imagen(b);
 	 
@@ -81,10 +81,10 @@ double trapezoidal_area(double a, double b, int n)
 	 return (trapezoid_width / 2) * 2*result;
 }
 
-double imagen(double x)
+long double imagen(double x)
 {
 	/*Evaluar x en la parabola y retornar el valor obtenido*/
-	 double y;
+	 long double y;
 	 y = ((x*x));
 	 return y;
 }

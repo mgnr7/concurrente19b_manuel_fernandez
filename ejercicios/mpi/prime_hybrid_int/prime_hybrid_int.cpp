@@ -85,9 +85,15 @@ int main(int argc, char* argv[])
 				++prime_count;	
 	}
 	
-	std::cout << "Process " << my_rank << "  on hostname "<< hostname << "  found "<< prime_count 
-	<< " primes in range [" << my_start << ", " << my_finish << "]" << " in " 
-	<< std::setprecision(9) << elapsed << "s with " << thread_count<< " threads" << std::endl;
+	
+	MPI_Reduce(&my_lucky_number, &global_sum, /*count*/ 1, MPI_INT, MPI_SUM, /*root*/ 0, MPI_COMM_WORLD);
+	/*Recibe la cantidad de primos obtenida por los otros procesos, e imprime el resultado*/
+	if(my_rank == 0)
+	{
+		std::cout << prime_count << " primes found in range ["<< global_start <<", "<<global_finish<< "[ in "
+		<< std::setprecision(9) << elapsed << "s with " << process_count <<" processes"<< std::endl;
+	}
+	
 	
 	MPI_Finalize();
 }
