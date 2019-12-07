@@ -34,27 +34,12 @@ int main(int argc, char* argv[])
 	
 	
 
-	#pragma omp parallel for num_threads (thread_count) schedule(static) default (none) shared(limit) reduction(+: prime_count)
-	for ( size_t current = 2; current <= limit; ++current )
-	{
-		if ( is_prime(current) )
-				++prime_count;	
-	}
-
-	#pragma omp parallel for num_threads (thread_count) schedule(dynamic) default (none) shared(limit) reduction(+: prime_count)
-	for ( size_t current = 2; current <= limit; ++current )
-	{
-		if ( is_prime(current) )
-				++prime_count;	
-	}
-
-
-	#pragma omp parallel for num_threads (thread_count) schedule(guided) default (none) shared(limit) reduction(+: prime_count)
-	for ( size_t current = 2; current <= limit; ++current )
-	{
-		if ( is_prime(current) )
-				++prime_count;	
-	}
+	#pragma omp parallel for num_threads (thread_count) schedule(runtime) default (none) shared(limit) reduction(+: prime_count)
+		for ( size_t current = 2; current <= limit; ++current )
+		{
+			if ( is_prime(current) )
+					prime_count += prime_count;		
+		}
 
 	fprintf(stdout, "%zu primes found between 2 and %zu\n", prime_count, limit);
 	return 0;

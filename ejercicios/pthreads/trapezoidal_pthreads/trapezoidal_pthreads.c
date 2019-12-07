@@ -7,10 +7,10 @@
 
 typedef struct
 {
-	double a;		/*punto inferior*/
-	double b;		/*punto superior*/
+	long double a;		/*punto inferior*/
+	long double b;		/*punto superior*/
 	int n;			/*cantidad de trapecios*/
-	double result;	/*resultado*/
+	long double result;	/*resultado*/
 	int thread_count;
 	pthread_mutex_t mutex;
 }shared_data_t;
@@ -18,10 +18,10 @@ typedef struct
 
 typedef struct
 {
-	double bottom;			/*punto inferior del intervalo en el que va a calcular el thread*/
-	double top;				/*punto superior del intervalo en el que va a calcular el thread*/
+	long double bottom;			/*punto inferior del intervalo en el que va a calcular el thread*/
+	long double top;				/*punto superior del intervalo en el que va a calcular el thread*/
 	int cant_trapecios;		/*cantidad de trapecios para el thread*/
-	double thread_result;	/*resultado del thread*/
+	long double thread_result;	/*resultado del thread*/
 	shared_data_t* shared_data;
 }private_data_t;
 
@@ -29,7 +29,7 @@ typedef struct
 int analyze_arguments(int argc, char*argv[], shared_data_t* shared_data);
 int create_threads(shared_data_t* shared_data);
 void* trapezoidal_area(void* data);	/*Calcula la integral de la funcion "f" en el intervalo [a, b] con "n" trapecios*/
-double imagen(double x);							/*Devuelve la imagen f(x)*/
+long double imagen(long double x);							/*Devuelve la imagen f(x)*/
 
 
 int main (int argc, char*argv[])
@@ -49,7 +49,7 @@ int main (int argc, char*argv[])
 		int error = create_threads(shared_data);
 		if(error == 0)
 		{
-			printf("Total Area: %lf \n", shared_data->result);
+			printf("Total Area: %0.Lf \n", shared_data->result);
 			struct timespec end_time;
 			clock_gettime(CLOCK_MONOTONIC, &end_time);	
 			double elapsed_seconds = end_time.tv_sec - start_time.tv_sec + 1e-9 *(end_time.tv_nsec - start_time.tv_nsec);
@@ -69,12 +69,12 @@ int analyze_arguments(int argc, char*argv[], shared_data_t* shared_data)
 		fprintf(stderr, "\n	usage: a, b, n, thread_count \n");	
 		return 1;
 	}
-	if(sscanf(argv[1],"%lf", &shared_data->a) != 1)
+	if(sscanf(argv[1],"%Lf", &shared_data->a) != 1)
 	{
 		fprintf(stderr, "\n	invalid a value: %s\n", argv[1]);	
 		return 2;
 	}	
-	if(sscanf(argv[2],"%lf", &shared_data->b) != 1 || shared_data->a > shared_data->b)
+	if(sscanf(argv[2],"%Lf", &shared_data->b) != 1 || shared_data->a > shared_data->b)
 	{	
 		fprintf(stderr, "invalid b value: %s\n", argv[2]);
 		return 2;
@@ -134,17 +134,17 @@ void* trapezoidal_area(void* data)
 {
 	 private_data_t* private_data = (private_data_t*)data;
 	 shared_data_t* shared_data = private_data->shared_data;
-	 double a = private_data->bottom;
-	 double b = private_data->top;
+	 long double a = private_data->bottom;
+	 long double b = private_data->top;
 	 int n = private_data->cant_trapecios;
-	 double trapezoid_width;
+	 long double trapezoid_width;
 	 trapezoid_width = (b - a) / n;
 	 
-	 double thr_result;
+	 long double thr_result;
 	 thr_result = imagen(a);
 	 thr_result += imagen(b);
 	 
-	 for(double index = 1; index < n; index++)
+	 for(long double index = 1; index < n; index++)
 	 {
 		 thr_result = thr_result + imagen(a + index * trapezoid_width);
 	 } 
@@ -156,10 +156,8 @@ void* trapezoidal_area(void* data)
 	 return NULL;
 }
 
-double imagen(double x)
+long double imagen(long double x)
 {
 	/*Evaluar x en la parabola y retornar el valor obtenido*/
-	 double y;
-	 y = (x*x);
-	 return y;
+	 return (100*(x*x)) +(5*x)+ 125;
 }

@@ -10,8 +10,8 @@ long double imagen(double x);							/*Devuelve la imagen f(x)*/
 int main (int argc, char*argv[])
 {
 
-	double a;		/*punto inferior*/
-	double b;		/*punto superior*/
+	long double a;		/*punto inferior*/
+	long double b;		/*punto superior*/
 	int n;			/*cantidad de trapecios*/
 	long double result;	/*resultado*/
 	
@@ -21,13 +21,13 @@ int main (int argc, char*argv[])
 		return 1;
 	}
 
-	if(sscanf(argv[1],"%lf", &a) != 1)
+	if(sscanf(argv[1],"%Lf", &a) != 1)
 	{
 		fprintf(stderr, "\n	invalid a value: %s\n", argv[1]);	
 		return 2;
 	}
 		
-	if(sscanf(argv[2],"%lf", &b) != 1 || a > b)
+	if(sscanf(argv[2],"%Lf", &b) != 1 || a > b)
 	{	
 		fprintf(stderr, "invalid b value: %s\n", argv[2]);
 		return 2;
@@ -85,6 +85,6 @@ long double imagen(double x)
 {
 	/*Evaluar x en la parabola y retornar el valor obtenido*/
 	 long double y;
-	 y = ((x*x));
+	 y = (100*(x*x)) +(5*x)+ 125;
 	 return y;
 }

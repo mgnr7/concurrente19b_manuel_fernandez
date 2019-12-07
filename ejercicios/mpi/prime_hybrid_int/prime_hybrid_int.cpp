@@ -57,19 +57,11 @@ int main(int argc, char* argv[])
 	else
 	{
 		if ( my_rank == 0 )
-		{
 			std::cin >> global_start >> global_finish;
-			for ( int destination = 1; destination < process_count; ++destination )
-			{
-				MPI_Send(&global_start, 1, MPI_INT, destination, /*tag*/ 0, MPI_COMM_WORLD);
-				MPI_Send(&global_finish, 1, MPI_INT, destination, /*tag*/ 0, MPI_COMM_WORLD);
-			}
-		}
-		else
-		{
-			MPI_Recv(&global_start, 1, MPI_INT, /*source*/ 0, /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-			MPI_Recv(&global_finish, 1, MPI_INT, /*source*/ 0, /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-		}
+		
+			
+		MPI_Bcast(&global_start, 1, MPI_INT, 0, MPI_COMM_WORLD);		
+		MPI_Bcast(&global_finish, 1, MPI_INT, 0, MPI_COMM_WORLD);	
 	}
 		
 	const int my_start = calculate_start( my_rank, process_count, global_finish, global_start);
@@ -85,13 +77,14 @@ int main(int argc, char* argv[])
 				++prime_count;	
 	}
 	
+	int total_prime_count = 0;
+	MPI_Reduce(&prime_count, &total_prime_count, /*count*/ 1, MPI_INT, MPI_SUM, /*root*/ 0, MPI_COMM_WORLD);
 	
-	MPI_Reduce(&my_lucky_number, &global_sum, /*count*/ 1, MPI_INT, MPI_SUM, /*root*/ 0, MPI_COMM_WORLD);
 	/*Recibe la cantidad de primos obtenida por los otros procesos, e imprime el resultado*/
 	if(my_rank == 0)
 	{
-		std::cout << prime_count << " primes found in range ["<< global_start <<", "<<global_finish<< "[ in "
-		<< std::setprecision(9) << elapsed << "s with " << process_count <<" processes"<< std::endl;
+		std::cout << total_prime_count << " primes found in range ["<< global_start <<", "<<global_finish<< "[ in "
+		<< std::setprecision(9) << elapsed << "s with " << process_count <<" processes and "<<thread_count * process_count<<" threads"<< std::endl;
 	}
 	
 	

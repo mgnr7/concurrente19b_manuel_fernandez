@@ -101,5 +101,5 @@ double trapezoidal_area(double a, double b, int n)
 double imagen(double x)
 {
 	/*Evaluar x en la parabola y retornar el valor obtenido*/
-	 return x*x;
+	 return (100*(x*x)) +(5*x)+ 125;
 }
