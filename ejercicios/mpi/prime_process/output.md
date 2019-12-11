@@ -1,4 +1,4 @@
-#Prime_Count_Hybrid
+#Prime_Hybrid_Int
 
 Tiempo 1:
 	in range [3, 90000000[ in 14.174805641s with 2 processes and 16 threads
