@@ -3,7 +3,6 @@
 #include <iomanip>
 #include <iostream>
 #include <mpi.h>
-#include <omp.h>
 
 int calculate_start(int worker_id, int workers, int finish, int begin)
 {
@@ -47,8 +46,6 @@ int main(int argc, char* argv[])
 	int global_finish = 0;
 	double start_time = MPI_Wtime();
 	
-	int thread_count = omp_get_max_threads();
-	
 	if ( argc >= 3 )
 	{
 		global_start = atoi(argv[1]);
@@ -57,11 +54,18 @@ int main(int argc, char* argv[])
 	else
 	{
 		if ( my_rank == 0 )
+		{
 			std::cin >> global_start >> global_finish;
+			for ( int destination = 1; destination < process_count; ++destination )
+			{
+				MPI_Send(&global_start, 1, MPI_INT, destination, /*tag*/ 0, MPI_COMM_WORLD);
+				MPI_Send(&global_finish, 1, MPI_INT, destination, /*tag*/ 0, MPI_COMM_WORLD);
+			}
+		}
+			
 		
 			
-		MPI_Bcast(&global_start, 1, MPI_INT, 0, MPI_COMM_WORLD);		
-		MPI_Bcast(&global_finish, 1, MPI_INT, 0, MPI_COMM_WORLD);	
+		
 	}
 		
 	const int my_start = calculate_start( my_rank, process_count, global_finish, global_start);
@@ -70,24 +74,29 @@ int main(int argc, char* argv[])
 	
 	
 
-	#pragma omp parallel for num_threads (thread_count) default (none) reduction(+: prime_count)
 	for ( int current = my_start; current <= my_finish; ++current )
 	{
 		if ( is_prime(current) )
 				++prime_count;	
 	}
 	
-	int total_prime_count = 0;
-	MPI_Reduce(&prime_count, &total_prime_count, /*count*/ 1, MPI_INT, MPI_SUM, /*root*/ 0, MPI_COMM_WORLD);
-	MPI_Reduce(&thread_count, &thread_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+	int total_prime_count = prime_count;
 	
-	long double elapsed = MPI_Wtime() - start_time;
 	
 	/*Recibe la cantidad de primos obtenida por los otros procesos, e imprime el resultado*/
 	if(my_rank == 0)
 	{
+		for ( int destination = 1; destination < process_count; ++destination )
+		{
+			MPI_Recv(&prime_count, 1, MPI_INT, /*source*/ destination, /*tag*/ 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			total_prime_count += prime_count;
+		}
+		double elapsed = MPI_Wtime() - start_time;
 		std::cout << total_prime_count << " primes found in range ["<< global_start <<", "<<global_finish<< "[ in "
-		<< std::setprecision(9) << std::fixed << elapsed << "s with " << process_count <<" processes and "<<thread_count<<" threads"<< std::endl;
+		<< std::setprecision(9) << std::fixed << elapsed << "s with " << process_count <<" processes "<< std::endl;
+	}
+	else{
+		MPI_Send(&prime_count, 1, MPI_INT, 0, /*tag*/ 0, MPI_COMM_WORLD);
 	}
 	
 	
