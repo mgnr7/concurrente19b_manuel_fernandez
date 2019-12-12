@@ -1,58 +1,29 @@
+#Cantidad maxima de procesos que permite el cluster arenal
+637
+
+
 #Prime_Hybrid_Int
 
-Tiempo 1:
-	in range [3, 90000000[ 
+Menor duracion:
+	in range [3, 90000000[ 10.508697987s with 637 processes and 5096 threads
 
-
-Tiempo 2:
-	in range [3, 90000000[ 
-
-
-Tiempo 3:
-	in range [3, 90000000[ 
-
-
-Tiempo 4:
-	in range [3, 90000000[ 
-
-
-Tiempo 5:
-	in range [3, 90000000[ 
 
 
 #Prime_Process
 
-Tiempo 1:
-	in range [3, 90000000[ 
+Mejor duracion:
+	in range [3, 90000000[ 12.665952682s with 637 processes
 
-Tiempo 2:
-	in range [3, 90000000[ 
 
-Tiempo 3:
-	in range [3, 90000000[ 
 
-Tiempo 4:
-	in range [3, 90000000[ 
-
-Tiempo 5:
-	in range [3, 90000000[ 
 
 #Prime_Process_Reduction
 
-Tiempo 1:
-	in range [3, 90000000[ 
+Mejor duracion:
+	in range [3, 90000000[ 12.444920778s with 637 processes
 
-Tiempo 2:
-	in range [3, 90000000[ 
 
-Tiempo 3:
-	in range [3, 90000000[ 
 
-Tiempo 4:
-	in range [3, 90000000[ 
-
-Tiempo 5:
-	in range [3, 90000000[ 
 
 #Resultados
 
