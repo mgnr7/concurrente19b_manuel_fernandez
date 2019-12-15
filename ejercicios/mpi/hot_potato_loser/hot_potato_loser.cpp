@@ -1,8 +1,11 @@
 #include <algorithm>
 #include <cstdlib>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <mpi.h>
+
+#define MESSAGE_CAPACITY 1024
 
 int main(int argc, char* argv[])
 {
@@ -19,6 +22,8 @@ int main(int argc, char* argv[])
 	MPI_Get_processor_name(hostname, &hostname_length);
 	
 	int hot_potato = 0;
+	char message[MESSAGE_CAPACITY];
+	sprintf(message, "The potato exploded, rank: %d", my_rank);
 	
 	if ( argc >= 2 )
 	{
@@ -29,57 +34,46 @@ int main(int argc, char* argv[])
 		MPI_Finalize();
 		return 0;
 	}
-	if(hot_potato < 1)
+	
+	--hot_potato;
+	if(hot_potato == 0)
 	{
-		std::cout << "invalid hot_potato value" << std::endl;
-		MPI_Finalize();
-		return 0;
-	}
-
-
-	/*Verificar si hot_potato es negativa, si es negativa terminar el juego*/
-	/*decrementar hot_potato, si es 0 explota, si no enviarla al siguiente proceso*/
-	if(my_rank < process_count - 1)
-	{
-		MPI_Send(&hot_potato, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
-	}
-	else
-	{
-		MPI_Send(&hot_potato, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+		if(my_rank != 0)
+		{
+			--hot_potato;
+			MPI_Send(&message, strlen(message) + 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+		}
+		else{
+			std::cout << message;
+		}	
 	}
 	
+	MPI_Send(&hot_potato, 1, MPI_INT, (my_rank + 1) % process_count, 0, MPI_COMM_WORLD);
 	
 	if(my_rank != 0)
 	{
 		MPI_Recv(&hot_potato, 1, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		if(hot_potato < 0)
+		{
+			MPI_Finalize();
+			return 0;
+		}
 	}
-	else
+
+	if(my_rank == 0)
 	{
-		MPI_Recv(&hot_potato, 1, MPI_INT, process_count, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(&hot_potato, 1, MPI_INT, process_count - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		if(hot_potato < 0)
+		{
+			for(int index = 1; index < process_count; ++index)/*Arreglar*/
+			{
+				MPI_Recv(&message, MESSAGE_CAPACITY, MPI_CHAR, index, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+				std::cout << message;
+			}
+			MPI_Finalize();
+			return 0;
+		}
 	}
-	
-	if(hot_potato < 0)
-	{
-		MPI_Finalize();
-		return 0;
-	}
-	
-	--hot_potato;
-	
-	if(hot_potato == 0)
-	{
-		--hot_potato;
-		std::cout << "The potato exploded" << std::endl;	
-	}
-/*	
-	if(my_rank < process_count - 1)
-	{
-		MPI_Send(&hot_potato, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
-	}
-	else
-	{
-		MPI_Send(&hot_potato, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-	}
-*/
+
 	MPI_Finalize();
 }
