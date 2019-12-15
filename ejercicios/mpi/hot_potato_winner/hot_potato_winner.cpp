@@ -40,27 +40,9 @@ int main(int argc, char* argv[])
 			std::cout << "Hot_Potato Invalid value"<< std::endl;
 			return 0;
 		}
-		--hot_potato;
-		
-		/*if(hot_potato == 0)
-		{
-			std::cout << "The potato exploded, rank: " << my_rank << std::endl;
-			hot_potato = hot_potato_original;
-			out_of_game = 1;
-			++losers;
-			MPI_Send(&hot_potato, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
-			MPI_Bcast(&losers, 1, MPI_INT, 0, MPI_COMM_WORLD);
-			MPI_Bcast(&hot_potato_original, 1, MPI_INT, 0, MPI_COMM_WORLD);
-			MPI_Bcast(&game_on, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		}
-		else
-		{
-			MPI_Send(&hot_potato, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
-			MPI_Bcast(&losers, 1, MPI_INT, 0, MPI_COMM_WORLD);
-			MPI_Bcast(&hot_potato_original, 1, MPI_INT, 0, MPI_COMM_WORLD);
-			MPI_Bcast(&game_on, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		}
-		*/		
+		MPI_Bcast(&losers, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&hot_potato_original, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Bcast(&game_on, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	}
 	else{
 		std::cout << "Hot_Potato initial value required" << std::endl;
@@ -68,9 +50,7 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	MPI_Bcast(&losers, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(&hot_potato_original, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	MPI_Bcast(&game_on, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	
 
 while(game_on)
 {
@@ -89,7 +69,7 @@ while(game_on)
 			if(losers == process_count - 1)
 			{
 				game_on = 0;
-				/*enviar mensaje a root*/
+				std::cout << "Winner! rank: " << my_rank << std::endl;
 			}
 			else
 			{
@@ -114,7 +94,7 @@ while(game_on)
 			if(losers == process_count - 1)
 			{
 				game_on = 0;
-				/*enviar mensaje a root*/
+				std::cout << "Winner! rank: " << my_rank << std::endl;
 			}
 			else
 			{

@@ -34,50 +34,30 @@ int main(int argc, char* argv[])
 		MPI_Finalize();
 		return 0;
 	}
-	
-	
-	
-	
-	--hot_potato;
-	
-	if(hot_potato == 0)
+
+
+
+	while(hot_potato > 0)
 	{
-		if(my_rank != 0)
+		--hot_potato;
+		if(hot_potato == 0)
 		{
 			--hot_potato;
-			MPI_Send(&message, strlen(message) + 1, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+			std::cout <<" exploto rank: "<< my_rank << std::endl;	
 		}
-		else{
-			std::cout << message;
-		}	
+		
+		MPI_Send(&hot_potato, 1, MPI_INT, (my_rank + 1) % process_count, 0, MPI_COMM_WORLD);
+
+		if(my_rank != 0)
+		{
+			MPI_Recv(&hot_potato, 1, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		}
+		else
+		{
+			MPI_Recv(&hot_potato, 1, MPI_INT, process_count - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		}
 	}
 	
-	MPI_Send(&hot_potato, 1, MPI_INT, (my_rank + 1) % process_count, 0, MPI_COMM_WORLD);
 	
-	if(my_rank != 0)
-	{
-		MPI_Recv(&hot_potato, 1, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-		if(hot_potato < 0)
-		{
-			MPI_Finalize();
-			return 0;
-		}
-	}
-
-	if(my_rank == 0)
-	{
-		MPI_Recv(&hot_potato, 1, MPI_INT, process_count - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-		if(hot_potato < 0)
-		{
-			for(int index = 1; index < process_count; ++index)/*Arreglar*/
-			{
-				MPI_Recv(&message, MESSAGE_CAPACITY, MPI_CHAR, index, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-				std::cout << message;
-			}
-			MPI_Finalize();
-			return 0;
-		}
-	}
-
 	MPI_Finalize();
 }
