@@ -1,8 +1,11 @@
 #include <algorithm>
 #include <cstdlib>
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <mpi.h>
+
+#define MESSAGE_CAPACITY 1024
 
 int main(int argc, char* argv[])
 {
@@ -17,6 +20,9 @@ int main(int argc, char* argv[])
 	char hostname[MPI_MAX_PROCESSOR_NAME];	
 	int hostname_length = -1;
 	MPI_Get_processor_name(hostname, &hostname_length);
+	
+	char message[MESSAGE_CAPACITY];
+	sprintf(message, "Winner!!, rank: %d", my_rank);
 	
 	int hot_potato_original = 0;
 	int hot_potato = 0;
@@ -36,7 +42,7 @@ int main(int argc, char* argv[])
 		}
 		--hot_potato;
 		
-		if(hot_potato == 0)
+		/*if(hot_potato == 0)
 		{
 			std::cout << "The potato exploded, rank: " << my_rank << std::endl;
 			hot_potato = hot_potato_original;
@@ -54,7 +60,7 @@ int main(int argc, char* argv[])
 			MPI_Bcast(&hot_potato_original, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			MPI_Bcast(&game_on, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		}
-				
+		*/		
 	}
 	else{
 		std::cout << "Hot_Potato initial value required" << std::endl;
@@ -62,92 +68,67 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	/*Identificar cuando un proceso salio del juego: losers*/
-	/*Verificar si hot_potato es negativa, si es negativa proceso sale del juego y lo unico que hace es pasar la papa al proceso siguiente sin decrementarla*/
-	/*Cuando la papa explota, hay que darle el valor original y enviarla al siguiente proceso*/
-	/*decrementar hot_potato, si es 0 explota, si no enviarla al siguiente proceso*/
-	/*Cuando un proceso detecta que es el unico en el juego imprime que es el ganador*/
+	MPI_Bcast(&losers, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&hot_potato_original, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Bcast(&game_on, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
+while(game_on)
+{
+	MPI_Send(&hot_potato, 1, MPI_INT, (my_rank + 1) % process_count, 0, MPI_COMM_WORLD);
+	MPI_Send(&game_on, 1, MPI_INT, (my_rank + 1) % process_count, 0, MPI_COMM_WORLD);
+	MPI_Send(&losers, 1, MPI_INT, (my_rank + 1) % process_count, 0, MPI_COMM_WORLD);	
 	
-	while(game_on)
+	if(my_rank != 0)
 	{
+		MPI_Recv(&hot_potato, 1, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(&game_on, 1, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(&losers, 1, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		
-		if(my_rank != 0)
+		if(!out_of_game)
 		{
-			MPI_Recv(&hot_potato, 1, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-			MPI_Recv(&game_on, 1, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-			MPI_Recv(&losers, 1, MPI_INT, my_rank - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-		}
-		else
-		{
-			MPI_Recv(&hot_potato, 1, MPI_INT, process_count, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-			MPI_Recv(&game_on, 1, MPI_INT, process_count, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-			MPI_Recv(&losers, 1, MPI_INT, process_count, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-		}	
-			
-		if(!out_of_game) /*El proceso sigue en juego*/
-		{
-			if(losers == process_count -1) /*El proceso gano*/
+			if(losers == process_count - 1)
 			{
-				std::cout << "WINNER!!, rank: " << my_rank << std::endl;	
 				game_on = 0;
-				
-				if(my_rank < process_count - 1)
-				{
-					MPI_Send(&hot_potato, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
-					MPI_Send(&losers, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
-					MPI_Send(&game_on, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
-				}
-				else
-				{
-					MPI_Send(&hot_potato, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-					MPI_Send(&losers, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-					MPI_Send(&game_on, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-				}
-				
+				/*enviar mensaje a root*/
 			}
-			
-			else /*Aun no hay ganador*/
+			else
 			{
 				--hot_potato;
-				
 				if(hot_potato == 0)
 				{
-					std::cout << "The potato exploded, rank: " << my_rank << std::endl;	
 					out_of_game = 1;
 					++losers;
 					hot_potato = hot_potato_original;
 				}
-				
-				if(my_rank < process_count - 1)
-				{
-					MPI_Send(&hot_potato, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
-					MPI_Send(&losers, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
-				}
-				else
-				{
-					MPI_Send(&hot_potato, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-					MPI_Send(&losers, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-				}
-
 			}
-
 		}
-		else/*El proceso ya no esta en juego*/
+	}
+
+	if(my_rank == 0)
+	{
+		MPI_Recv(&hot_potato, 1, MPI_INT, process_count - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(&game_on, 1, MPI_INT, process_count - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		MPI_Recv(&losers, 1, MPI_INT, process_count - 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		if(!out_of_game)
 		{
-			if(my_rank < process_count - 1)
+			if(losers == process_count - 1)
 			{
-				MPI_Send(&hot_potato, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
-				MPI_Send(&losers, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
+				game_on = 0;
+				/*enviar mensaje a root*/
 			}
 			else
 			{
-				MPI_Send(&hot_potato, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-				MPI_Send(&losers, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+				--hot_potato;
+				if(hot_potato == 0)
+				{
+					out_of_game = 1;
+					++losers;
+					hot_potato = hot_potato_original;
+				}
 			}
 		}
-	
 	}
+}
 
 	MPI_Finalize();
 }

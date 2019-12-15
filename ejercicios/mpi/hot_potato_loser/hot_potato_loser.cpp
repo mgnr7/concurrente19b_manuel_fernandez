@@ -35,7 +35,11 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 	
+	
+	
+	
 	--hot_potato;
+	
 	if(hot_potato == 0)
 	{
 		if(my_rank != 0)
