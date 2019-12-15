@@ -27,4 +27,4 @@ Mejor duracion:
 
 #Resultados
 
-
+Prime_Hybrid__Int tuvo la menor duracion de las tres soluciones. 

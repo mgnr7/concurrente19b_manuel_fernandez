@@ -20,11 +20,12 @@ int main(int argc, char* argv[])
 	
 	int hot_potato_original = 0;
 	int hot_potato = 0;
+	int intial_rank = 0;
 	int losers = 0;
 	int out_of_game = 0;
 	int game_on = 1;
 	
-	if ( argc >= 2 )
+	if ( argc >= 3 )
 	{
 		hot_potato_original = atoi(argv[1]);
 		hot_potato = atoi(argv[1]);
@@ -59,7 +60,7 @@ int main(int argc, char* argv[])
 		
 	}
 	else{
-		std::cout << "Hot_Potato initial value required" << std::endl;
+		std::cout << "Hot_Potato initial value and initial process required" << std::endl;
 		MPI_Finalize();
 		return 0;
 	}
