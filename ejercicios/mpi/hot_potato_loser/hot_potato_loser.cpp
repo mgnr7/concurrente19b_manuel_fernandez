@@ -22,34 +22,32 @@ int main(int argc, char* argv[])
 	
 	if ( argc >= 2 )
 	{
-		hot_potato = atoi(argv[1]);
-		
-		--hot_potato;
-		
-		if(hot_potato == 0)
-		{
-			--hot_potato;
-			std::cout << "The potato exploded" << std::endl;
-			MPI_Send(&hot_potato, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
-			
-			MPI_Finalize();
-			return 0;
-		}
-		else
-		{
-			MPI_Send(&hot_potato, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);	
-		}
-		
-		
+		hot_potato = atoi(argv[1]);	
 	}
 	else{
 		std::cout << "positive integer required" << std::endl;
 		MPI_Finalize();
 		return 0;
 	}
+	if(hot_potato < 1)
+	{
+		std::cout << "invalid hot_potato value" << std::endl;
+		MPI_Finalize();
+		return 0;
+	}
+
 
 	/*Verificar si hot_potato es negativa, si es negativa terminar el juego*/
 	/*decrementar hot_potato, si es 0 explota, si no enviarla al siguiente proceso*/
+	if(my_rank < process_count - 1)
+	{
+		MPI_Send(&hot_potato, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
+	}
+	else
+	{
+		MPI_Send(&hot_potato, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+	}
+	
 	
 	if(my_rank != 0)
 	{
@@ -73,7 +71,7 @@ int main(int argc, char* argv[])
 		--hot_potato;
 		std::cout << "The potato exploded" << std::endl;	
 	}
-	
+/*	
 	if(my_rank < process_count - 1)
 	{
 		MPI_Send(&hot_potato, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
@@ -82,6 +80,6 @@ int main(int argc, char* argv[])
 	{
 		MPI_Send(&hot_potato, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 	}
-
+*/
 	MPI_Finalize();
 }
