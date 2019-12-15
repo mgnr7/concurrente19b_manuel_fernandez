@@ -27,14 +27,13 @@ int main(int argc, char* argv[])
 	if ( argc >= 2 )
 	{
 		hot_potato_original = atoi(argv[1]);
-		hot_potato = atoi(argv[1]);
+		hot_potato = hot_potato_original;
 		
 		if(hot_potato < 1)
 		{
 			std::cout << "Hot_Potato Invalid value"<< std::endl;
 			return 0;
 		}
-		
 		--hot_potato;
 		
 		if(hot_potato == 0)
@@ -43,20 +42,19 @@ int main(int argc, char* argv[])
 			hot_potato = hot_potato_original;
 			out_of_game = 1;
 			++losers;
-			MPI_Send(&hot_potato, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
+			MPI_Send(&hot_potato, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
 			MPI_Bcast(&losers, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			MPI_Bcast(&hot_potato_original, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			MPI_Bcast(&game_on, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		}
 		else
 		{
-			MPI_Send(&hot_potato, 1, MPI_INT, my_rank + 1, 0, MPI_COMM_WORLD);
+			MPI_Send(&hot_potato, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
 			MPI_Bcast(&losers, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			MPI_Bcast(&hot_potato_original, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			MPI_Bcast(&game_on, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		}
-		
-		
+				
 	}
 	else{
 		std::cout << "Hot_Potato initial value required" << std::endl;
@@ -64,13 +62,12 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-
-	
 	/*Identificar cuando un proceso salio del juego: losers*/
 	/*Verificar si hot_potato es negativa, si es negativa proceso sale del juego y lo unico que hace es pasar la papa al proceso siguiente sin decrementarla*/
 	/*Cuando la papa explota, hay que darle el valor original y enviarla al siguiente proceso*/
 	/*decrementar hot_potato, si es 0 explota, si no enviarla al siguiente proceso*/
 	/*Cuando un proceso detecta que es el unico en el juego imprime que es el ganador*/
+
 	
 	while(game_on)
 	{
