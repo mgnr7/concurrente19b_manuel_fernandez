@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 	double b = 0.0;
 	std::string filename = "";
 	
-	if(argc == 3)
+	if(argc == 4)
 	{
 		filename = argv[1];
 		a = atof(argv[2]);
@@ -149,6 +149,17 @@ int main(int argc, char* argv[])
 			for(int j = calc_start(rows, i, process_count); j < (calc_finish(rows, i, process_count)); ++j)
 			{
 				MPI_Recv(total_mirror[j], cols, MPI_INT, i,0,MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			}
+		}
+	}
+	
+	if(my_rank == 0)
+	{
+		for(int r = 0; r < my_finish; ++r)
+		{
+			for(int c = 0; c < cols; ++c)
+			{
+				total_mirror[r][c] = mirror[r][c];
 			}
 		}
 	}
