@@ -19,7 +19,7 @@ void* run(void* data);
 
 int main (int argc, char*argv[])
 {
-	shared_data_t* shared_data = (shared_data_t*) calloc(1, sizeof(shared_data_t));
+	shared_data_t* shared_data = (shared_data_t*) calloc(1, sizeof(shared_data_t));		/*Solo se necesita una sola instancia de shared_data*/
 	if(shared_data == NULL)
 		return (void)fprintf(stderr, "error: could not allocate memory\n"), 2;
 	
